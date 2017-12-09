@@ -454,6 +454,7 @@ class mininetWiFi(object):
         node: name of the node
         cls: custom association class/constructor
         params: parameters for node
+        :type node : Node
         """
         if 'intf' in params:
             for intf_ in node.params['wlan']:
@@ -480,7 +481,14 @@ class mininetWiFi(object):
         else:
             node.params['ssid'][wlan] = 'meshNetwork'
 
-        if node.autoTxPower:
+        if "range" in params and "txpower" in params:
+            # todo accept txpower as a parameter of the interface
+            raise KeyError("Not possible to set range and txpower at the same time"
+                           ", choose one and set it according to the other")
+        if "range" in params:
+            node.autoTxPower = True
+            node.setRange(params["range"])
+        else:
             node.getRange(intf=node.params['wlan'][wlan], noiseLevel=95)
 
         node.setMeshIface(node.params['wlan'][wlan], **params)
@@ -496,7 +504,7 @@ class mininetWiFi(object):
         node: name of the node
         cls: custom association class/constructor
         params: parameters for station
-           
+        :type node : Node
         """
         if 'intf' in params:
             for intf_ in node.params['wlan']:
@@ -519,14 +527,15 @@ class mininetWiFi(object):
             node.params['ssid'][wlan] = 'adhocNetwork'
             node.params['associatedTo'][wlan] = 'adhocNetwork'
 
-        enable_wmediumd = cls.enable_wmediumd
-
-        if not node.autoTxPower:
+        if "range" in params:
+            node.setRange(params["range"])
+        else:
             node.getRange(intf=node.params['wlan'][wlan], noiseLevel=95)
 
         if 'channel' in params:
             node.setChannel(params['channel'], intf=node.params['wlan'][wlan])
 
+        enable_wmediumd = cls.enable_wmediumd
         node.configureAdhoc(wlan, enable_wmediumd)
         if 'intf' not in params:
             node.ifaceToAssociate += 1
@@ -1128,10 +1137,6 @@ class mininetWiFi(object):
                         wlan = 0
                     node.getRange(intf=node.params['wlan'][wlan])
                 else:
-                    if node.params['txpower'][wlan] == 14:
-                        node.autoTxPower=True
-                        node.params['txpower'][wlan] = \
-                            node.getTxPower_prop_model(wlan)
                     setParam = True
                     if node.type == 'vehicle':
                         setParam = False
