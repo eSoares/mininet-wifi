@@ -485,13 +485,14 @@ class mininetWiFi(object):
             # todo accept txpower as a parameter of the interface
             raise KeyError("Not possible to set range and txpower at the same time"
                            ", choose one and set it according to the other")
+
+        node.setMeshIface(node.params['wlan'][wlan], **params)
+
         if "range" in params:
             node.autoTxPower = True
             node.setRange(params["range"])
         else:
             node.getRange(intf=node.params['wlan'][wlan], noiseLevel=95)
-
-        node.setMeshIface(node.params['wlan'][wlan], **params)
 
         if 'intf' not in params:
             node.ifaceToAssociate += 1
@@ -527,6 +528,9 @@ class mininetWiFi(object):
             node.params['ssid'][wlan] = 'adhocNetwork'
             node.params['associatedTo'][wlan] = 'adhocNetwork'
 
+        enable_wmediumd = cls.enable_wmediumd
+        node.configureAdhoc(wlan, enable_wmediumd)
+
         if "range" in params:
             node.setRange(params["range"])
         else:
@@ -535,8 +539,6 @@ class mininetWiFi(object):
         if 'channel' in params:
             node.setChannel(params['channel'], intf=node.params['wlan'][wlan])
 
-        enable_wmediumd = cls.enable_wmediumd
-        node.configureAdhoc(wlan, enable_wmediumd)
         if 'intf' not in params:
             node.ifaceToAssociate += 1
 
